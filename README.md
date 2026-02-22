@@ -1,4 +1,4 @@
-# 🌍 Somaliland District-Level Drought Prediction
+# Somaliland District-Level Drought Prediction
 
 [![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -8,7 +8,7 @@ A **production-ready machine learning pipeline** for predicting drought 3 months
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Project Overview](#-project-overview)
 - [Data Sources](#-data-sources)
@@ -26,7 +26,7 @@ A **production-ready machine learning pipeline** for predicting drought 3 months
 
 ---
 
-## 🌐 Project Overview
+## Project Overview
 
 Somaliland faces recurrent droughts that devastate pastoral and agricultural livelihoods. This project builds a **district-level early warning system** that predicts drought conditions **3 months ahead**, giving communities, NGOs, and government agencies time to mobilise resources.
 
@@ -50,7 +50,7 @@ Drought in this region is driven by ENSO variability, Indian Ocean Dipole anomal
 
 ---
 
-## 📡 Data Sources
+## Data Sources
 
 ### 1. CHIRPS v2 — Rainfall
 - **Provider:** Climate Hazards Group, UC Santa Barbara  
@@ -91,7 +91,7 @@ Drought in this region is driven by ENSO variability, Indian Ocean Dipole anomal
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 somaliland-drought-prediction/
@@ -128,7 +128,7 @@ somaliland-drought-prediction/
 
 ---
 
-## ⚙️ Installation
+## Installation
 
 ### Option 1 — Local Python environment
 
@@ -159,7 +159,7 @@ docker run -p 8888:8888 -p 8501:8501 somaliland-drought
 
 ---
 
-## 📥 Data Download Guide
+## Data Download Guide
 
 ### CHIRPS Rainfall
 
@@ -212,7 +212,7 @@ ONI data is fetched automatically from NOAA CPC. No manual download required.
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
 ### Run the full notebook
 
@@ -267,7 +267,7 @@ streamlit run streamlit_app/app.py
 
 ---
 
-## 🧠 Model Description
+## Model Description
 
 ### Architecture
 
@@ -307,7 +307,7 @@ Input features → SimpleImputer (median) → StandardScaler → Estimator → O
 
 ---
 
-## 📊 Evaluation Results
+## Evaluation Results
 
 *Results below are from synthetic data (real CHIRPS/ERA5 will differ).*
 
@@ -331,7 +331,7 @@ Input features → SimpleImputer (median) → StandardScaler → Estimator → O
 
 ---
 
-## 📱 Streamlit App
+## Streamlit App
 
 The interactive dashboard allows users to:
 - Select district and date range
@@ -346,7 +346,7 @@ streamlit run streamlit_app/app.py
 
 ---
 
-## 🐳 Docker Deployment
+## Docker Deployment
 
 ```bash
 # Build image
@@ -361,7 +361,7 @@ docker run -p 8501:8501 somaliland-drought streamlit run streamlit_app/app.py
 
 ---
 
-## 🔮 Future Improvements
+## Future Improvements
 
 - [ ] **Real data integration** — connect CHIRPS raster download pipeline with `rasterstats` for true district-level zonal statistics
 - [ ] **Hyperparameter optimisation** — implement Optuna Bayesian search with time-series cross-validation
@@ -377,7 +377,7 @@ docker run -p 8501:8501 somaliland-drought streamlit run streamlit_app/app.py
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please:
 
@@ -391,13 +391,13 @@ Please ensure code passes `black`, `isort`, and `flake8` checks before submittin
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
 
 ---
 
-## 🙏 Acknowledgements
+## Acknowledgements
 
 - **CHIRPS:** Funk, C., Peterson, P., Landsfeld, M. et al. (2015). The climate hazards infrared precipitation with stations — a new environmental record for monitoring extremes. *Scientific Data*, 2, 150066.
 - **ERA5-Land:** Muñoz-Sabater, J. et al. (2021). ERA5-Land: a state-of-the-art global reanalysis dataset for land applications. *Earth System Science Data*, 13, 4349–4383.
