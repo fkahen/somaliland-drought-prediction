@@ -30,47 +30,47 @@ Drought in this region is driven by ENSO variability, Indian Ocean Dipole anomal
 ###### Data Sources
 
 ###### 1. CHIRPS v2 — Rainfall
-- ***Provider:*** Climate Hazards Group, UC Santa Barbara  
-- **URL:** https://data.chc.ucsb.edu/products/CHIRPS-2.0/  
-- **Resolution:** 0.05° / monthly  
-- **Period:** 1981–present  
+- Provider: Climate Hazards Group, UC Santa Barbara  
+- URL: https://data.chc.ucsb.edu/products/CHIRPS-2.0/  
+- Resolution: 0.05° / monthly  
+- Period: 1981–present  
 - **Variables used:** Monthly accumulated precipitation (mm)
 
 ###### 2. ERA5-Land — Climate Reanalysis
-- **Provider:** ECMWF / Copernicus Climate Change Service  
-- **URL:** https://cds.climate.copernicus.eu/  
-- **Resolution:** 0.1° / monthly  
-- **Period:** 1950–present  
-- **Variables used:** 2m temperature, volumetric soil water layer 1, potential evaporation
+- Provider: ECMWF / Copernicus Climate Change Service  
+- URL: https://cds.climate.copernicus.eu/  
+- Resolution: 0.1° / monthly  
+- Period: 1950–present  
+- Variables used: 2m temperature, volumetric soil water layer 1, potential evaporation
 
 ###### 3. SWALIM — Ground Truth Station Data
-- **Provider:** FAO Somalia Water and Land Information Management  
-- **URL:** https://www.faoswalim.org/  
-- **Variables used:** Rainfall station observations, drought reports  
-- **Access:** Requires account registration at the SWALIM data portal
+- Provider: FAO Somalia Water and Land Information Management  
+- URL: https://www.faoswalim.org/  
+- Variables used: Rainfall station observations, drought reports  
+- Access: Requires account registration at the SWALIM data portal
 
-### 4. FAO ASIS — Agricultural Stress Index
-- **Provider:** FAO GIEWS Earth Observation  
-- **URL:** https://www.fao.org/giews/earthobservation/  
-- **Variables used:** Agricultural Stress Index (0–100) per district
+###### 4. FAO ASIS — Agricultural Stress Index
+- Provider: FAO GIEWS Earth Observation  
+- URL:https://www.fao.org/giews/earthobservation/  
+- Variables used: Agricultural Stress Index (0–100) per district
 
 ###### 5. World Bank Open Data — Socioeconomic Indicators
-- **Provider:** World Bank  
-- **URL:** https://data.worldbank.org/  
-- **API:** via `wbgapi` Python package  
-- **Country:** Somalia (SO) — Somaliland not separately recognised  
-- **Variables used:** Agriculture value added (% GDP), rural population %, GDP per capita, arable land %
+- Provider: World Bank  
+- URL: https://data.worldbank.org/  
+- API: via `wbgapi` Python package  
+- Country: Somalia (SO) — Somaliland not separately recognised  
+- Variables used: Agriculture value added (% GDP), rural population %, GDP per capita, arable land %
 
 ###### 6. NOAA CPC — ENSO/ONI Index
-- **Provider:** NOAA Climate Prediction Center  
-- **URL:** https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt  
-- **Variables used:** Oceanic Niño Index (3-month running mean SST anomaly, Niño 3.4 region)
+- Provider: NOAA Climate Prediction Center  
+- URL: https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt  
+- Variables used: Oceanic Niño Index (3-month running mean SST anomaly, Niño 3.4 region)
 
 ---
 
 ###### Installation
 
-####### Option 1 — Local Python environment
+Option 1 — Local Python environment
 
 ```bash
 # 1. Clone the repository
@@ -90,7 +90,7 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-####### Option 2 — Docker (recommended for reproducibility)
+ Option 2 — Docker (recommended for reproducibility)
 
 ```bash
 docker build -t somaliland-drought .
@@ -100,7 +100,7 @@ docker run -p 8888:8888 -p 8501:8501 somaliland-drought
 
 ###### Data Download Guide
 
-####### CHIRPS Rainfall
+CHIRPS Rainfall
 
 ```bash
 # Download a single monthly file (example: January 1981)
@@ -119,7 +119,7 @@ for y in years:
 bash download_chirps.sh
 ```
 
-####### ERA5-Land via CDS API
+ERA5-Land via CDS API
 
 ```bash
 # 1. Register at https://cds.climate.copernicus.eu/
@@ -134,18 +134,18 @@ EOF
 python -c "from src.data_loader import download_era5; from pathlib import Path; download_era5(Path('data/raw/era5_somaliland.nc'))"
 ```
 
-####### SWALIM Data
+SWALIM Data
 
 1. Register at https://www.faoswalim.org/user/register
 2. Navigate to **Data & Products → Rainfall Data**
 3. Download monthly district-level data
 4. Save as `data/raw/swalim_asis.csv` with columns: `date, district, asis_index`
 
-####### World Bank Data (automatic)
+World Bank Data (automatic)
 
 World Bank data is fetched automatically via the `wbgapi` Python package. No manual download required.
 
-####### ENSO / ONI Index (automatic)
+ENSO / ONI Index (automatic)
 
 ONI data is fetched automatically from NOAA CPC. No manual download required.
 
@@ -153,14 +153,14 @@ ONI data is fetched automatically from NOAA CPC. No manual download required.
 
 ###### How to Run
 
-####### Run the full notebook
+Run the full notebook
 
 ```bash
 cd notebooks
 jupyter notebook drought_prediction.ipynb
 ```
 
-####### Run via Python scripts
+Run via Python scripts
 
 ```python
 from src.data_loader import load_all_data
