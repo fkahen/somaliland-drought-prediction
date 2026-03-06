@@ -1,345 +1,225 @@
+# Somaliland Drought Prediction
 
-
-A production-ready machine learning pipeline** for predicting drought 3 months ahead at district level across Somaliland, using multi-source climate and socioeconomic data.
-
-
-##### Project Overview
-
-Somaliland faces recurrent droughts that devastate pastoral and agricultural livelihoods. This project builds a **district-level early warning system** that predicts drought conditions **3 months ahead**, giving communities, NGOs, and government agencies time to mobilise resources.
-
-###### Targets
-
-| Target | Type | Description |
-|--------|------|-------------|
-| `target_spi3` | Regression | SPI-3 value at *t* + 3 months |
-| `target_drought` | Classification | 1 if SPI-3 < −1 at *t* + 3 months |
-
-###### Somaliland Climate Context
-
-| Season | Months | Role |
-|--------|--------|------|
-| **Gu** | April – June | Long rains — primary agricultural season |
-| **Deyr** | October – November | Short rains — secondary season |
-| **Hagaa** | July – September | Dry season |
-| **Jilaal** | December – March | Cold dry season |
-
-Drought in this region is driven by ENSO variability, Indian Ocean Dipole anomalies, long-term warming trends, and land degradation.
+A machine learning pipeline for district-level drought forecasting three months ahead across Somaliland, designed to support humanitarian early warning systems.
 
 ---
 
-###### Data Sources
+## Background
 
-###### 1. CHIRPS v2 — Rainfall
-- Provider: Climate Hazards Group, UC Santa Barbara  
-- URL: https://data.chc.ucsb.edu/products/CHIRPS-2.0/  
-- Resolution: 0.05° / monthly  
-- Period: 1981–present  
-- **Variables used:** Monthly accumulated precipitation (mm)
+The Horn of Africa experiences recurrent drought cycles that drive food insecurity, displacement, and economic loss. In Somaliland, where agriculture and pastoralism underpin rural livelihoods, seasonal drought can escalate rapidly into humanitarian crises. Effective early warning—weeks or months before conditions deteriorate—gives governments, NGOs, and aid organizations the lead time needed for pre-positioned response.
 
-###### 2. ERA5-Land — Climate Reanalysis
-- Provider: ECMWF / Copernicus Climate Change Service  
-- URL: https://cds.climate.copernicus.eu/  
-- Resolution: 0.1° / monthly  
-- Period: 1950–present  
-- Variables used: 2m temperature, volumetric soil water layer 1, potential evaporation
-
-###### 3. SWALIM — Ground Truth Station Data
-- Provider: FAO Somalia Water and Land Information Management  
-- URL: https://www.faoswalim.org/  
-- Variables used: Rainfall station observations, drought reports  
-- Access: Requires account registration at the SWALIM data portal
-
-###### 4. FAO ASIS — Agricultural Stress Index
-- Provider: FAO GIEWS Earth Observation  
-- URL:https://www.fao.org/giews/earthobservation/  
-- Variables used: Agricultural Stress Index (0–100) per district
-
-###### 5. World Bank Open Data — Socioeconomic Indicators
-- Provider: World Bank  
-- URL: https://data.worldbank.org/  
-- API: via `wbgapi` Python package  
-- Country: Somalia (SO) — Somaliland not separately recognised  
-- Variables used: Agriculture value added (% GDP), rural population %, GDP per capita, arable land %
-
-###### 6. NOAA CPC — ENSO/ONI Index
-- Provider: NOAA Climate Prediction Center  
-- URL: https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt  
-- Variables used: Oceanic Niño Index (3-month running mean SST anomaly, Niño 3.4 region)
+This project builds a reproducible forecasting system that estimates drought risk at the district level with a three-month horizon. It integrates satellite-derived rainfall estimates, climate reanalysis fields, global teleconnection indices, and socioeconomic covariates into an ensemble modeling framework.
 
 ---
 
-###### Installation
+## Problem Statement
 
-Option 1 — Local Python environment
+Given observational and reanalysis data available at time *t*, predict whether a district will experience drought conditions at time *t + 3 months*, operationalized as:
+
+- **Regression target**: SPI-3 value three months ahead (`target_spi3`)
+- **Classification target**: binary drought indicator, positive when SPI-3 < −1 (`target_drought`)
+
+The three-month lead time was chosen to align with operational planning cycles used by humanitarian logistics and food security assessments.
+
+---
+
+## Datasets
+
+| Source | Variable | Coverage |
+|---|---|---|
+| CHIRPS v2.0 | Monthly precipitation | 1981–present, 0.05° |
+| ERA5-Land (ECMWF) | Temperature, soil moisture, evapotranspiration | 1950–present, 0.1° |
+| SWALIM | Ground station rainfall and hydrology | Somaliland network |
+| NOAA | ENSO index (Niño 3.4 SST anomaly) | 1950–present |
+| World Bank | GDP, rural population share | Country/district level |
+
+CHIRPS and ERA5 are the primary drivers. SWALIM station data provides in-situ validation. ENSO and socioeconomic variables are fetched automatically by the pipeline at runtime. Download instructions for each source are provided below.
+
+---
+
+## Methodology
+
+### Feature Engineering
+
+Raw inputs are transformed into a feature matrix spanning several categories:
+
+- **SPI indices**: standardized precipitation indices at 1, 3, and 6-month accumulation windows
+- **Climate anomalies**: rainfall, temperature, and soil moisture departures from climatological means
+- **Lag features**: 1, 3, and 6-month lags of key variables
+- **Rolling statistics**: 3, 6, and 12-month moving averages
+- **Derived indicators**: aridity index, drought stress proxy
+- **Climate interaction terms**: ENSO × seasonal encoding
+- **Calendar encoding**: month expressed as sine/cosine to capture seasonality
+- **Spatial covariates**: district centroid coordinates
+- **Socioeconomic context**: GDP per capita, rural population fraction
+
+### Models
+
+Three gradient-based and tree ensemble models are trained in parallel:
+
+- **Random Forest** — bagged decision trees, robust to noisy features
+- **XGBoost** — gradient boosting with regularization, strong baseline
+- **LightGBM** — histogram-based boosting, efficient on larger feature sets
+
+Each model is wrapped in a scikit-learn pipeline: `features → imputation → scaling → estimator → prediction`. This ensures consistent preprocessing and simplifies deployment.
+
+### Train/Test Split
+
+The pipeline uses strict chronological splitting to prevent data leakage:
+
+| Split | Period |
+|---|---|
+| Training | 1985–2015 |
+| Test | 2016–2023 |
+
+Random cross-validation is not used because climate observations are serially correlated.
+
+---
+
+## Pipeline
+
+The full workflow—data loading, feature construction, model training, evaluation, and artifact saving—runs with a single command:
 
 ```bash
-# 1. Clone the repository
-git clone https://github.com/your-org/somaliland-drought-prediction.git
+python -m src.run_pipeline
+```
+
+This executes the following stages in sequence:
+
+1. Load raw datasets (CHIRPS, ERA5, SWALIM, ENSO, World Bank)
+2. Merge, align, and clean inputs at district-month resolution
+3. Construct the feature matrix
+4. Train regression and classification models
+5. Evaluate on the held-out test period
+6. Write trained model artifacts to `models/`
+
+The pipeline is designed to be reproducible. Given the same input data, it will produce the same outputs.
+
+---
+
+## Installation
+
+```bash
+git clone https://github.com/fkahen/somaliland-drought-prediction.git
 cd somaliland-drought-prediction
 
-# 2. Create virtual environment
 python -m venv .venv
-source .venv/bin/activate        # Linux / macOS
-# .venv\Scripts\activate         # Windows
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
 
-# 3. Install dependencies
 pip install --upgrade pip
 pip install -r requirements.txt
-
-# 4. Install project package (editable)
-pip install -e .
 ```
 
- Option 2 — Docker (recommended for reproducibility)
-
-```bash
-docker build -t somaliland-drought .
-docker run -p 8888:8888 -p 8501:8501 somaliland-drought
-```
 ---
 
-###### Data Download Guide
+## Data Download
 
-CHIRPS Rainfall
+**CHIRPS rainfall**
 
+Single month example:
 ```bash
-# Download a single monthly file (example: January 1981)
-wget https://data.chc.ucsb.edu/products/CHIRPS-2.0/global_monthly/tifs/chirps-v2.0.1981.01.tif.gz \
-     -P data/raw/
+wget https://data.chc.ucsb.edu/products/CHIRPS-2.0/global_monthly/tifs/chirps-v2.0.1981.01.tif.gz -P data/raw/
+```
 
-# Or use the bulk download script (generates commands for 1981–2023)
-python -c "
-years = range(1981, 2024)
-months = range(1, 13)
-for y in years:
-    for m in months:
-        fn = f'chirps-v2.0.{y}.{m:02d}.tif.gz'
-        print(f'wget https://data.chc.ucsb.edu/products/CHIRPS-2.0/global_monthly/tifs/{fn} -P data/raw/')
-" > download_chirps.sh
+For bulk download:
+```bash
 bash download_chirps.sh
 ```
 
-ERA5-Land via CDS API
+**ERA5-Land**
+
+Register at the [Copernicus Climate Data Store](https://cds.climate.copernicus.eu/), install the API client, and configure `~/.cdsapirc` with your key:
 
 ```bash
-# 1. Register at https://cds.climate.copernicus.eu/
-# 2. Install cdsapi: pip install cdsapi
-# 3. Create ~/.cdsapirc:
-cat > ~/.cdsapirc << EOF
-url: https://cds.climate.copernicus.eu/api/v2
-key: YOUR_UID:YOUR_API_KEY
-EOF
-
-# 4. Download (handled automatically by src/data_loader.py when credentials are present)
+pip install cdsapi
 python -c "from src.data_loader import download_era5; from pathlib import Path; download_era5(Path('data/raw/era5_somaliland.nc'))"
 ```
 
-SWALIM Data
+**SWALIM**
 
-1. Register at https://www.faoswalim.org/user/register
-2. Navigate to **Data & Products → Rainfall Data**
-3. Download monthly district-level data
-4. Save as `data/raw/swalim_asis.csv` with columns: `date, district, asis_index`
+Download manually from the [SWALIM portal](https://www.faoswalim.org/) and save as `data/raw/swalim_asis.csv`.
 
-World Bank Data (automatic)
-
-World Bank data is fetched automatically via the `wbgapi` Python package. No manual download required.
-
-ENSO / ONI Index (automatic)
-
-ONI data is fetched automatically from NOAA CPC. No manual download required.
+World Bank and ENSO index data are fetched automatically at runtime.
 
 ---
 
-###### How to Run
+## Running the Code
 
-Run the full notebook
-
+**Full pipeline:**
 ```bash
-cd notebooks
-jupyter notebook drought_prediction.ipynb
+python -m src.run_pipeline
 ```
 
-Run via Python scripts
-
-```python
-from src.data_loader import load_all_data
-from src.feature_engineering import build_feature_matrix, get_feature_columns
-from src.modeling import temporal_split, train_regression_models, train_classification_models, save_all_models
-from src.evaluation import run_regression_evaluation, run_classification_evaluation
-from src.utils import setup_logging, set_seed
-
-# Setup
-logger = setup_logging()
-set_seed(42)
-
-# Load data
-data = load_all_data()
-
-# Merge (see notebook for full merge logic)
-# ... master_df = merge_all(...)
-
-# Feature engineering
-feature_df = build_feature_matrix(master_df)
-feature_cols = get_feature_columns(feature_df)
-
-# Split
-split = temporal_split(feature_df, feature_cols)
-
-# Train
-reg_pipes = train_regression_models(split["X_train"], split["y_train_reg"])
-cls_pipes = train_classification_models(split["X_train"], split["y_train_cls"])
-
-# Evaluate
-reg_results, reg_preds = run_regression_evaluation(reg_pipes, split["X_test"], split["y_test_reg"])
-cls_results, cls_preds, cls_probs = run_classification_evaluation(cls_pipes, split["X_test"], split["y_test_cls"])
-
-# Save
-save_all_models(reg_pipes, cls_pipes, feature_cols, save_dir=Path("models/"))
+**Interactive exploration:**
+```bash
+jupyter notebook notebooks/drought_prediction.ipynb
 ```
 
-### Launch Streamlit dashboard
-
+**Streamlit dashboard** (district-level forecast visualization):
 ```bash
 streamlit run streamlit_app/app.py
 ```
 
+The dashboard runs at `http://localhost:8501` and supports district and date range selection, three-month drought probability forecasts, historical SPI visualization, and prediction export.
+
 ---
 
-## Model Description
-
-### Architecture
-
-All models are wrapped in a **scikit-learn Pipeline**:
+## Project Structure
 
 ```
-Input features → SimpleImputer (median) → StandardScaler → Estimator → Output
-```
-
-###### Feature Engineering
-
-| Feature Group | Variables | Count |
-|--------------|-----------|-------|
-| SPI | SPI-1, SPI-3, SPI-6 | 3 |
-| Climate anomalies | Rainfall, temperature, soil moisture, PET | 4 |
-| Lag features | 1, 3, 6-month lags of key variables | ~60 |
-| Rolling means | 3, 6, 12-month rolling averages | ~30 |
-| Derived | Aridity index, water deficit, drought stress | 5 |
-| ENSO interactions | ONI × season | 2 |
-| Calendar | Month sin/cos, season dummies | 4 |
-| Spatial | Longitude, latitude, district code | 3 |
-| Socioeconomic | GDP, rural pop, agriculture | 4 |
-
-###### Models Compared
-
-| Model | Hyperparameters |
-|-------|----------------|
-| Random Forest | n_estimators=200, max_depth=12, min_samples_leaf=5 |
-| XGBoost | n_estimators=300, max_depth=6, lr=0.05, subsample=0.8 |
-| LightGBM | n_estimators=300, max_depth=8, lr=0.05, subsample=0.8 |
-
-###### Train / Test Split
-
-- **Train:** January 1985 – December 2015  
-- **Test:** January 2016 – December 2023  
-- **Note:** Random splits are explicitly avoided — time-series data requires strict chronological splitting to prevent future leakage.
-
----
-
-###### Evaluation Results
-
-*Results below are from synthetic data (real CHIRPS/ERA5 will differ).*
-
-### Regression — SPI-3 Prediction
-
-| Model | RMSE ↓ | R² ↑ | MAE ↓ |
-|-------|--------|-------|-------|
-| Random Forest | — | — | — |
-| XGBoost | — | — | — |
-| LightGBM | — | — | — |
-
-### Classification — Drought Binary
-
-| Model | AUC ↑ | F1 ↑ | Precision | Recall |
-|-------|--------|-------|-----------|--------|
-| Random Forest | — | — | — | — |
-| XGBoost | — | — | — | — |
-| LightGBM | — | — | — | — |
-
-*Run the notebook with real data to populate these tables.*
-
----
-
-## Streamlit App
-
-The interactive dashboard allows users to:
-- Select district and date range
-- View 3-month drought probability forecast
-- Explore historical SPI time series
-- Download predictions as CSV
-
-```bash
-streamlit run streamlit_app/app.py
-# Open: http://localhost:8501
+somaliland-drought-prediction/
+├── data/
+│   ├── raw/
+│   └── processed/
+├── docs/
+├── models/
+├── notebooks/
+│   └── drought_prediction.ipynb
+├── src/
+│   ├── data_loader.py
+│   ├── feature_engineering.py
+│   ├── modeling.py
+│   ├── evaluation.py
+│   └── utils.py
+├── streamlit_app/
+│   └── app.py
+├── run_pipeline.py
+├── requirements.txt
+├── Dockerfile
+└── README.md
 ```
 
 ---
 
-####### Docker Deployment
+## Future Directions
 
-```bash
-# Build image
-docker build -t somaliland-drought:latest .
-
-# Run Jupyter notebook server
-docker run -p 8888:8888 -v $(pwd)/data:/app/data somaliland-drought
-
-# Run Streamlit app
-docker run -p 8501:8501 somaliland-drought streamlit run streamlit_app/app.py
-```
+- **Vegetation signals**: incorporate NDVI from MODIS or Sentinel-2 as an additional drought proxy
+- **Deep learning**: evaluate LSTM and Temporal Fusion Transformer architectures for sequence modeling
+- **Hyperparameter search**: integrate Optuna for systematic tuning
+- **Spatial resolution**: downscale forecasts to sub-district level using spatial disaggregation
+- **Operational deployment**: automated monthly retraining and alert delivery via email/SMS
 
 ---
 
-###### Future Improvements
+## Contributing
 
-- [ ] **Real data integration** — connect CHIRPS raster download pipeline with `rasterstats` for true district-level zonal statistics
-- [ ] **Hyperparameter optimisation** — implement Optuna Bayesian search with time-series cross-validation
-- [ ] **Blocked time-series CV** — use `sklearn.model_selection.TimeSeriesSplit` for robust validation
-- [ ] **Deep learning** — LSTM or Temporal Fusion Transformer for sequence modeling
-- [ ] **NDVI features** — integrate MODIS/Sentinel-2 vegetation indices for rangeland condition
-- [ ] **Indian Ocean Dipole** — add IOD index as additional ENSO-like predictor
-- [ ] **Ensemble** — build a stacking ensemble of RF, XGBoost, and LightGBM
-- [ ] **Automated retraining** — monthly cron job + MLflow experiment tracking
-- [ ] **Alert system** — email/SMS notifications when drought probability exceeds threshold
-- [ ] **Uncertainty quantification** — prediction intervals via quantile regression or conformal prediction
-- [ ] **Spatial downscaling** — sub-district predictions using kriging or spatial interpolation
-
----
-
-###### Contributing
-
-Contributions are welcome! Please:
+Contributions from climate scientists, ML practitioners, and humanitarian data specialists are welcome. To contribute:
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Commit changes (`git commit -m 'Add my feature'`)
-4. Push to branch (`git push origin feature/my-feature`)
-5. Open a Pull Request
+2. Create a feature branch
+3. Commit changes with clear messages
+4. Open a pull request
 
-Please ensure code passes `black`, `isort`, and `flake8` checks before submitting.
-
----
-
-###### License
-
-This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
+Please ensure code passes `black`, `isort`, and `flake8` before submitting.
 
 ---
 
-###### Acknowledgements
+## License
 
-- **CHIRPS:** Funk, C., Peterson, P., Landsfeld, M. et al. (2015). The climate hazards infrared precipitation with stations — a new environmental record for monitoring extremes. *Scientific Data*, 2, 150066.
-- **ERA5-Land:** Muñoz-Sabater, J. et al. (2021). ERA5-Land: a state-of-the-art global reanalysis dataset for land applications. *Earth System Science Data*, 13, 4349–4383.
-- **SWALIM:** FAO Somalia Water and Land Information Management — http://www.faoswalim.org/
-- **World Bank:** World Bank Open Data — https://data.worldbank.org/
-- **SPI methodology:** McKee, T.B., Doesken, N.J., Kleist, J. (1993). The relationship of drought frequency and duration to time scale. *8th Conference on Applied Climatology*.
+MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## Acknowledgements
+
+This project relies on open datasets from the [Climate Hazards Center](https://www.chc.ucsb.edu/), [ECMWF](https://www.ecmwf.int/), [FAO/SWALIM](https://www.faoswalim.org/), [World Bank](https://data.worldbank.org/), and [NOAA](https://www.noaa.gov/). Their commitment to open data access makes operational climate monitoring research possible.
