@@ -3,18 +3,18 @@
 A production-ready machine learning pipeline** for predicting drought 3 months ahead at district level across Somaliland, using multi-source climate and socioeconomic data.
 
 
-## Project Overview
+##### Project Overview
 
 Somaliland faces recurrent droughts that devastate pastoral and agricultural livelihoods. This project builds a **district-level early warning system** that predicts drought conditions **3 months ahead**, giving communities, NGOs, and government agencies time to mobilise resources.
 
-### Targets
+###### Targets
 
 | Target | Type | Description |
 |--------|------|-------------|
 | `target_spi3` | Regression | SPI-3 value at *t* + 3 months |
 | `target_drought` | Classification | 1 if SPI-3 < −1 at *t* + 3 months |
 
-### Somaliland Climate Context
+###### Somaliland Climate Context
 
 | Season | Months | Role |
 |--------|--------|------|
@@ -27,23 +27,23 @@ Drought in this region is driven by ENSO variability, Indian Ocean Dipole anomal
 
 ---
 
-## Data Sources
+###### Data Sources
 
-### 1. CHIRPS v2 — Rainfall
-- **Provider:** Climate Hazards Group, UC Santa Barbara  
+###### 1. CHIRPS v2 — Rainfall
+- ***Provider:*** Climate Hazards Group, UC Santa Barbara  
 - **URL:** https://data.chc.ucsb.edu/products/CHIRPS-2.0/  
 - **Resolution:** 0.05° / monthly  
 - **Period:** 1981–present  
 - **Variables used:** Monthly accumulated precipitation (mm)
 
-### 2. ERA5-Land — Climate Reanalysis
+###### 2. ERA5-Land — Climate Reanalysis
 - **Provider:** ECMWF / Copernicus Climate Change Service  
 - **URL:** https://cds.climate.copernicus.eu/  
 - **Resolution:** 0.1° / monthly  
 - **Period:** 1950–present  
 - **Variables used:** 2m temperature, volumetric soil water layer 1, potential evaporation
 
-### 3. SWALIM — Ground Truth Station Data
+###### 3. SWALIM — Ground Truth Station Data
 - **Provider:** FAO Somalia Water and Land Information Management  
 - **URL:** https://www.faoswalim.org/  
 - **Variables used:** Rainfall station observations, drought reports  
@@ -54,23 +54,23 @@ Drought in this region is driven by ENSO variability, Indian Ocean Dipole anomal
 - **URL:** https://www.fao.org/giews/earthobservation/  
 - **Variables used:** Agricultural Stress Index (0–100) per district
 
-### 5. World Bank Open Data — Socioeconomic Indicators
+###### 5. World Bank Open Data — Socioeconomic Indicators
 - **Provider:** World Bank  
 - **URL:** https://data.worldbank.org/  
 - **API:** via `wbgapi` Python package  
 - **Country:** Somalia (SO) — Somaliland not separately recognised  
 - **Variables used:** Agriculture value added (% GDP), rural population %, GDP per capita, arable land %
 
-### 6. NOAA CPC — ENSO/ONI Index
+###### 6. NOAA CPC — ENSO/ONI Index
 - **Provider:** NOAA Climate Prediction Center  
 - **URL:** https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt  
 - **Variables used:** Oceanic Niño Index (3-month running mean SST anomaly, Niño 3.4 region)
 
 ---
 
-## Installation
+###### Installation
 
-### Option 1 — Local Python environment
+####### Option 1 — Local Python environment
 
 ```bash
 # 1. Clone the repository
@@ -90,7 +90,7 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-### Option 2 — Docker (recommended for reproducibility)
+####### Option 2 — Docker (recommended for reproducibility)
 
 ```bash
 docker build -t somaliland-drought .
@@ -98,9 +98,9 @@ docker run -p 8888:8888 -p 8501:8501 somaliland-drought
 ```
 ---
 
-## Data Download Guide
+###### Data Download Guide
 
-### CHIRPS Rainfall
+####### CHIRPS Rainfall
 
 ```bash
 # Download a single monthly file (example: January 1981)
@@ -119,7 +119,7 @@ for y in years:
 bash download_chirps.sh
 ```
 
-### ERA5-Land via CDS API
+####### ERA5-Land via CDS API
 
 ```bash
 # 1. Register at https://cds.climate.copernicus.eu/
@@ -134,33 +134,33 @@ EOF
 python -c "from src.data_loader import download_era5; from pathlib import Path; download_era5(Path('data/raw/era5_somaliland.nc'))"
 ```
 
-### SWALIM Data
+####### SWALIM Data
 
 1. Register at https://www.faoswalim.org/user/register
 2. Navigate to **Data & Products → Rainfall Data**
 3. Download monthly district-level data
 4. Save as `data/raw/swalim_asis.csv` with columns: `date, district, asis_index`
 
-### World Bank Data (automatic)
+####### World Bank Data (automatic)
 
 World Bank data is fetched automatically via the `wbgapi` Python package. No manual download required.
 
-### ENSO / ONI Index (automatic)
+####### ENSO / ONI Index (automatic)
 
 ONI data is fetched automatically from NOAA CPC. No manual download required.
 
 ---
 
-## How to Run
+###### How to Run
 
-### Run the full notebook
+####### Run the full notebook
 
 ```bash
 cd notebooks
 jupyter notebook drought_prediction.ipynb
 ```
 
-### Run via Python scripts
+####### Run via Python scripts
 
 ```python
 from src.data_loader import load_all_data
@@ -216,7 +216,7 @@ All models are wrapped in a **scikit-learn Pipeline**:
 Input features → SimpleImputer (median) → StandardScaler → Estimator → Output
 ```
 
-### Feature Engineering
+###### Feature Engineering
 
 | Feature Group | Variables | Count |
 |--------------|-----------|-------|
@@ -230,7 +230,7 @@ Input features → SimpleImputer (median) → StandardScaler → Estimator → O
 | Spatial | Longitude, latitude, district code | 3 |
 | Socioeconomic | GDP, rural pop, agriculture | 4 |
 
-### Models Compared
+###### Models Compared
 
 | Model | Hyperparameters |
 |-------|----------------|
@@ -238,7 +238,7 @@ Input features → SimpleImputer (median) → StandardScaler → Estimator → O
 | XGBoost | n_estimators=300, max_depth=6, lr=0.05, subsample=0.8 |
 | LightGBM | n_estimators=300, max_depth=8, lr=0.05, subsample=0.8 |
 
-### Train / Test Split
+###### Train / Test Split
 
 - **Train:** January 1985 – December 2015  
 - **Test:** January 2016 – December 2023  
@@ -246,7 +246,7 @@ Input features → SimpleImputer (median) → StandardScaler → Estimator → O
 
 ---
 
-## Evaluation Results
+###### Evaluation Results
 
 *Results below are from synthetic data (real CHIRPS/ERA5 will differ).*
 
@@ -285,7 +285,7 @@ streamlit run streamlit_app/app.py
 
 ---
 
-## Docker Deployment
+####### Docker Deployment
 
 ```bash
 # Build image
@@ -300,7 +300,7 @@ docker run -p 8501:8501 somaliland-drought streamlit run streamlit_app/app.py
 
 ---
 
-## Future Improvements
+###### Future Improvements
 
 - [ ] **Real data integration** — connect CHIRPS raster download pipeline with `rasterstats` for true district-level zonal statistics
 - [ ] **Hyperparameter optimisation** — implement Optuna Bayesian search with time-series cross-validation
@@ -316,7 +316,7 @@ docker run -p 8501:8501 somaliland-drought streamlit run streamlit_app/app.py
 
 ---
 
-## Contributing
+###### Contributing
 
 Contributions are welcome! Please:
 
@@ -330,13 +330,13 @@ Please ensure code passes `black`, `isort`, and `flake8` checks before submittin
 
 ---
 
-## License
+###### License
 
 This project is licensed under the **MIT License**. See [LICENSE](LICENSE) for details.
 
 ---
 
-## Acknowledgements
+###### Acknowledgements
 
 - **CHIRPS:** Funk, C., Peterson, P., Landsfeld, M. et al. (2015). The climate hazards infrared precipitation with stations — a new environmental record for monitoring extremes. *Scientific Data*, 2, 150066.
 - **ERA5-Land:** Muñoz-Sabater, J. et al. (2021). ERA5-Land: a state-of-the-art global reanalysis dataset for land applications. *Earth System Science Data*, 13, 4349–4383.
