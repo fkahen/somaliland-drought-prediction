@@ -1,30 +1,7 @@
-## Somaliland District-Level Drought Prediction
 
-[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A **production-ready machine learning pipeline** for predicting drought 3 months ahead at district level across Somaliland, using multi-source climate and socioeconomic data.
+A production-ready machine learning pipeline** for predicting drought 3 months ahead at district level across Somaliland, using multi-source climate and socioeconomic data.
 
----
-
-## Table of Contents
-
-- [Project Overview](#-project-overview)
-- [Data Sources](#-data-sources)
-- [Repository Structure](#-repository-structure)
-- [Installation](#-installation)
-- [Data Download Guide](#-data-download-guide)
-- [How to Run](#-how-to-run)
-- [Model Description](#-model-description)
-- [Evaluation Results](#-evaluation-results)
-- [Streamlit App](#-streamlit-app)
-- [Docker Deployment](#-docker-deployment)
-- [Future Improvements](#-future-improvements)
-- [Contributing](#-contributing)
-- [License](#-license)
-
----
 
 ## Project Overview
 
@@ -91,43 +68,6 @@ Drought in this region is driven by ENSO variability, Indian Ocean Dipole anomal
 
 ---
 
-## Repository Structure
-
-```
-somaliland-drought-prediction/
-│
-├── data/
-│   ├── raw/                    # Original downloaded data (gitignored)
-│   └── processed/              # Engineered features, train/test splits
-│
-├── notebooks/
-│   └── drought_prediction.ipynb  # Main end-to-end analysis notebook
-│
-├── src/
-│   ├── __init__.py
-│   ├── data_loader.py          # Data ingestion from all sources
-│   ├── feature_engineering.py  # SPI, anomalies, lags, rolling features
-│   ├── modeling.py             # Model training, pipelines, serialization
-│   ├── evaluation.py           # Metrics, visualizations, SHAP
-│   └── utils.py                # Logging, seed, path helpers
-│
-├── models/                     # Saved .pkl pipelines (gitignored)
-│
-├── reports/
-│   └── figures/                # Generated plots and charts
-│
-├── streamlit_app/
-│   └── app.py                  # Interactive drought dashboard
-│
-├── Dockerfile                  # Container for reproducible environment
-├── requirements.txt
-├── setup.py
-├── README.md
-└── .gitignore
-```
-
----
-
 ## Installation
 
 ### Option 1 — Local Python environment
@@ -156,7 +96,6 @@ pip install -e .
 docker build -t somaliland-drought .
 docker run -p 8888:8888 -p 8501:8501 somaliland-drought
 ```
-
 ---
 
 ## Data Download Guide
